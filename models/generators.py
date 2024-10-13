@@ -8,7 +8,7 @@ import time as t
 
 
 
-class BinaryDetectionImageGenerator:
+class BDIGenerator:
 
     def __init__(self, input_sh=(128, 128, 3), data_folder=None, usg="train"):
 
@@ -28,28 +28,17 @@ class BinaryDetectionImageGenerator:
     def __collect_data__(self, image_path):
 
         remote_path = os.path.join(self.data_folder, image_path)
+
         image = cv2.imread(remote_path)
         if self.input_sh is not None:
             image = cv2.resize(image, self.input_sh[:-1])
         
+        image_id = self.images_json[image_path]["id"]
+        image_annot = self.annotations_json[str(image_id)]
 
-        for sample_n, img_spec in enumerate(self.images_json):
-            if img_spec["file_name"] == image_path:
-                
-                image_id = self.images_json[sample_n]["id"]
-                break
-        
-        need_ann = None
-        for sample_n, ann in enumerate(self.annotations_json):
-            if ann["image_id"] == image_id:
-
-                need_ann = ann
-                break
-        
-        
-        image_bb = need_ann["bbox"]
-        image_bba = need_ann["area"]
-        cll_label = need_ann["category_id"] 
+        image_bb = image_annot["bbox"]
+        image_bba = image_annot["area"] 
+        cll_label = image_annot["category_id"] 
         
         return (image, image_bb, image_bba, cll_label)
 
@@ -80,7 +69,7 @@ if __name__ == "__main__":
 
 
     s_time = t.time()
-    generator = BinaryDetectionImageGenerator()
+    generator = BDIGenerator()
     images = []
     bb = []
     bba = []

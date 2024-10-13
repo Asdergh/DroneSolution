@@ -19,57 +19,7 @@ from generators import BDIGenerator
 
 
 
-def calculate_iou(y_true, y_pred):
-    
-        results = []
-        for i in range(0,y_true.shape[0]):
-        
-            # set the types so we are sure what type we are using
-            y_true = y_true.astype(np.float32)
-            y_pred = y_pred.astype(np.float32)
 
-
-            # boxTrue
-            x_boxTrue_tleft = y_true[0,0]  # numpy index selection
-            y_boxTrue_tleft = y_true[0,1]
-            boxTrue_width = y_true[0,2]
-            boxTrue_height = y_true[0,3]
-            area_boxTrue = (boxTrue_width * boxTrue_height)
-
-            # boxPred
-            x_boxPred_tleft = y_pred[0,0]
-            y_boxPred_tleft = y_pred[0,1]
-            boxPred_width = y_pred[0,2]
-            boxPred_height = y_pred[0,3]
-            area_boxPred = (boxPred_width * boxPred_height)
-
-            # boxTrue
-            x_boxTrue_br = x_boxTrue_tleft + boxTrue_width
-            y_boxTrue_br = y_boxTrue_tleft + boxTrue_height # Version 2 revision
-
-            # boxPred
-            x_boxPred_br = x_boxPred_tleft + boxPred_width
-            y_boxPred_br = y_boxPred_tleft + boxPred_height # Version 2 revision
-
-            x_boxInt_tleft = np.max([x_boxTrue_tleft,x_boxPred_tleft])
-            y_boxInt_tleft = np.max([y_boxTrue_tleft,y_boxPred_tleft]) # Version 2 revision
-
-            x_boxInt_br = np.min([x_boxTrue_br,x_boxPred_br])
-            y_boxInt_br = np.min([y_boxTrue_br,y_boxPred_br]) 
-    
-            area_of_intersection = np.max([0,(x_boxInt_br - x_boxInt_tleft)]) * np.max([0,(y_boxInt_br - y_boxInt_tleft)])
-            iou = area_of_intersection / ((area_boxTrue + area_boxPred) - area_of_intersection)
-            iou = iou.astype(np.float32)
-            
-            results.append(iou)
-    
-        return np.asarray(results)
-    
-
-def IoU(y_true, y_pred):
-
-        calculated_iou = py_function(calculate_iou, [y_true, y_pred], tf.float32)
-        return calculated_iou
 
 class ResConv2D(Layer):
 
@@ -225,45 +175,6 @@ class YOLO(Model):
         return self.model(input)
             
 
-
-# if __name__ == "__main__":
-
-#     yolo_net = YOLO(input_sh=(128, 128, 3), dp_rate=0.45)
-#     yolo_net.compile(optimizer=Adam(), 
-#                     loss_fn=[
-#                         MeanSquaredError(), 
-#                         MeanSquaredError(), 
-#                         BinaryCrossentropy()
-#     ])
-    
-#     generator = BDIGenerator()
-#     images = []
-#     bb = []
-#     bba = []
-#     cll_labels = []
-#     for (sample_n, sample) in enumerate(iter(generator)):
-
-#         if sample_n == 1000:
-#             break
-
-#         images.append(sample[0])
-#         bb.append(sample[1])
-#         bba.append(sample[2])
-#         cll_labels.append(sample[3])
-    
-#     images = np.asarray(images)
-#     bb = np.asarray(bb)
-#     bba = np.asarray(bba)
-#     cll_labels = np.asarray(cll_labels)
-    
-
-#     images = images / 255.0
-#     images = (images - np.mean(images)) / np.std(images)
-#     bb = (bb - np.mean(bb)) / np.std(bb)
-#     bba = (bba - np.mean(bba)) / np.std(bba)
-
-#     yolo_net.load_weights(filepath="C:\\Users\\1\\Desktop\\drone_solution\\models_weights\\yolo_weights.weights.h5")
-#     yolo_net.predict(images)
     
 
     
