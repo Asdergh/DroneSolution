@@ -12,7 +12,7 @@ from tensorflow.keras import Model, Sequential
 
 from tensorflow.math import reduce_mean, reduce_max
 from tensorflow.math import exp, sin, cos, minimum, maximum
-from tensorflow import GradientTape, py_function
+from tensorflow import GradientTape, py_function, argmax
 
 from generators import BDIGenerator
 
@@ -69,14 +69,23 @@ class Conv2DBlock(Layer):
 
 
 
-class YOLO(Model):
+class ConvDetector(Model):
 
-    def __init__(self, input_sh, dp_rate, **kwargs):
+    def __init__(self, input_sh, dp_rate, num_cl=None, **kwargs):
 
         super().__init__(**kwargs)
+        self.num_cl = num_cl
+        if self.num_cl is None:
+            self.num_cl = 1
+
         self.input_sh = input_sh
         self.dp_rate = dp_rate
         self.model = self.__model__()
+        
+
+        grad_input = Input(shape=input_sh)
+        self.grad_model = Model(inputs=grad_input, 
+                           outputs=[self.model.get_layer("last_conv_layer").output, self.model.output[1]])
         
     
     def compile(self, optimizer, loss_fn, metrics=None):
@@ -123,7 +132,7 @@ class YOLO(Model):
            
         ])(input_layer)
         
-
+        last_conv_layer = Conv2D(filters=32, kernel_size=3, strides=1, padding="same", name="last_conv_layer")(conv_model)
         linear_model = Sequential(layers=[
                 Flatten(),
                 Dense(units=64, activation="linear"),
@@ -132,15 +141,15 @@ class YOLO(Model):
                 Dropout(rate=self.dp_rate),
                 Dense(units=12, activation="linear"),
                 Dropout(rate=self.dp_rate)
-        ])(conv_model)
+        ])(last_conv_layer)
 
         out1_layer = Dense(units=4, activation="relu", name="outpur1")(linear_model)
-        out2_layer = Dense(units=1, activation="sigmoid", name="output2")(linear_model)
+        out2_layer = Dense(units=self.num_cl, activation="sigmoid", name="output2")(linear_model)
 
         model = Model(inputs=input_layer, outputs=[out1_layer, out2_layer])
         return model
 
-    
+        
     def train_step(self, inputs):
 
         images, features = inputs
@@ -173,6 +182,14 @@ class YOLO(Model):
     @tf.function
     def call(self, input):
         return self.model(input)
+    
+
+    
+    
+            
+            
+
+
             
 
     
