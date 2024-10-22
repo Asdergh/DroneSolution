@@ -9,8 +9,13 @@ from tensorflow.keras.metrics import Mean
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import Model, Sequential
 from tensorflow import Module, GradientTape
+from tensorflow.keras.callbacks import Callback
 
 
+
+
+    
+    
 class SeBlock(Module):
 
     def __init__(self, ch, ratio):
@@ -85,6 +90,8 @@ class CodeBlock(Module):
         relu_layer = Activation("relu")
         conv_layer = Conv2D(filters=filters, kernel_size=3, strides=1, padding="same")
         se_layer = SeBlock(ch=filters, ratio=2)
+
+        self.layers = [norm_layer, relu_layer, conv_layer, se_layer]
     
     def __call__(self, inputs):
 
@@ -137,11 +144,18 @@ class BSS(Model):
         encoding2_layer = EncodingBlock(filters=64)(encoding1_layer)
         encoding3_layer = EncodingBlock(filters=32)(encoding2_layer)
 
-        decoding1_layer = DecodingLayer(filters=32)(encoding3_layer)
-        decoding2_layer = DecodingLayer(filters=64)(decoding1_layer)
-        decoding3_layer = DecodingLayer(filters=128)(decoding2_layer)
+        code_layer = CodeBlock(filters=32)(encoding3_layer)
+        code_layer = CodeBlock(filters=32)(code_layer)
+        code_layer = Concatenate()([code_layer, encoding3_layer])
 
-        out_layer = Conv2D(filters=self.input_sh[-1], kernel_size=1, padding="same", strides=1)(decoding3_layer)
+        decoding1_layer = DecodingLayer(filters=32)(code_layer)
+        decoding1_layer = Concatenate()([decoding1_layer, encoding2_layer])
+
+        decoding2_layer = DecodingLayer(filters=64)(decoding1_layer)
+        decoding2_layer = Concatenate()([decoding2_layer, encoding1_layer])
+
+        decoding3_layer = DecodingLayer(filters=128)(decoding2_layer)
+        out_layer = Conv2D(filters=1, kernel_size=1, padding="same", strides=1)(decoding3_layer)
         out_layer = Activation("sigmoid")(out_layer)
 
         model = Model(inputs=input_layer, outputs=out_layer)
@@ -184,27 +198,7 @@ class BSS(Model):
 
 
 
-if __name__ == "__main__":
 
-    random_data = np.random.normal(0, 0.12, (100, 128, 128, 3))
-    seg_model = BSS(input_sh=(128, 128, 3))
-    seg_model.compile(optimizer=Adam(), loss=MeanSquaredError())
-    seg_model.fit(random_data, random_data, epochs=1, batch_size=32)
-    
-    plt.style.use("dark_background")
-    fig, axis = plt.subplots(ncols=2)
-    
-    random_image = random_data[0]
-    random_image = np.expand_dims(random_image, axis=0)
-    seg_sample = seg_model.predict(random_image)
-
-    seg_sample = np.squeeze(seg_sample)
-    random_image = np.squeeze(random_image)
-
-    axis[0].imshow(random_image)
-    axis[1].imshow(seg_sample)
-
-    plt.show()
 
     
     

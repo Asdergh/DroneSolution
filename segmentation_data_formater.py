@@ -47,11 +47,11 @@ def make_segmentation(datafolder_path, seg_datafolder_path):
                             ]["name"]
                         
             
-                            
+                        
                         image_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
                         image_mask = cv2.inRange(image_hsv, color_bounds[0], color_bounds[1])
-                        result = cv2.bitwise_and(image, image, mask=image_mask)
-                        cv2.imwrite(image_path_seg, result)
+                        image_mask = cv2.cvtColor(image_mask, cv2.COLOR_RGB2GRAY)
+                        cv2.imwrite(image_path_seg, image_mask)
 
                     except BaseException:
                         pass

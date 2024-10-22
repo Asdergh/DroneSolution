@@ -64,7 +64,43 @@ class BDIGenerator:
         return data
 
 
+class IsGenerator:
 
+    def __init__(self, input_sz, images_path, segmentation_path):
+
+        self.input_sz = input_sz
+        self.images_path = images_path
+        self.segmentation_path = segmentation_path
+    
+    def __collect_data__(self):
+
+        random_image_f = rd.choice(os.listdir(self.images_path))
+        random_image = cv2.imread(os.path.join(self.images_path, random_image_f))
+        random_segim = [cv2.imread(os.path.join(self.segmentation_path, image_f)) 
+                        for image_f in os.listdir(self.segmentation_path)
+                        if image_f == random_image_f][0]
+        
+        
+        random_image = cv2.resize(random_image, self.input_sz)
+        random_segim = cv2.resize(random_segim, self.input_sz)
+        
+
+        return random_image, random_segim
+
+    def __iter__(self):
+
+        while True:
+
+            image, segim = self.__collect_data__()
+            yield image, segim
+    
+    def __next__(self):
+
+        image, segim = self.__collect_data__()
+        return image, segim 
+
+        
+        
 if __name__ == "__main__":
 
 
