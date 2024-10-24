@@ -12,7 +12,7 @@ def __run__():
     
     cap = cv2.VideoCapture(0)
     model = BSS()
-    model.model.load_weights("C:\\Users\\1\\Desktop\\drone_solution\\src\\models\\model_weights\\weights.weights.h5")
+    model.model.load_weights("model_weights//weights.weights.h5")
 
     while True:
         
