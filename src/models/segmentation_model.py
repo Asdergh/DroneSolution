@@ -13,9 +13,6 @@ from tensorflow.keras.callbacks import Callback
 
 
 
-
-    
-    
 class SeBlock(Module):
 
     def __init__(self, ch, ratio):
@@ -165,8 +162,7 @@ class BSS(Model):
 
         super().compile()
         self.optimizer = optimizer
-        self.binary_loss = loss[0]
-        self.none_binary_loss = loss[1]
+        self.loss = loss
         self.loss_tracker = Mean(name="segmentation loss")
     
     @property
@@ -181,10 +177,7 @@ class BSS(Model):
         with GradientTape() as gr_tape:
 
             segmented_images = self.model(images_t)
-            binary_loss = self.binary_loss(segmented_images, images_l)
-            none_binary_loss = self.none_binary_loss(segmented_images, images_l)
-            
-            loss = binary_loss + none_binary_loss
+            loss = self.loss(segmented_images, images_l)
         
         train_vars = self.model.trainable_variables
         grads = gr_tape.gradient(loss, train_vars)
