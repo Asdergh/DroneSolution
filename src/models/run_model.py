@@ -25,11 +25,14 @@ def __run__():
         segmented_image = model.predict(frame)
         segmented_image = np.squeeze(segmented_image)
         
-        plt.imshow(segmented_image, cmap="jet")
-        plt.show()
         
+        frame = cv2.resize(np.squeeze(frame), (640, 640))
+        segmented_image = cv2.resize(segmented_image, (640, 640))
+        cv2.imshow("frame", frame)
+        cv2.imshow("segmentation", segmented_image)
 
-        cv2.waitKey(1)
+        if cv2.waitKey(1) == ord("q"):
+            break
 
 
 if __name__ == "__main__":

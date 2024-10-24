@@ -78,7 +78,11 @@ class SegmentationModelCallback(Callback):
     def on_train_end(self, logs=None):
 
         model_weights_f = os.path.join(self.run_folder, "weights.weights.h5")
+        entire_model_f = os.path.join(self.run_folder, "segmentation_model.keras")
+        
         self.seg_model.save_weights(filepath=model_weights_f)
+        self.seg_model.save(entire_model_f)
+        
 
         
         
