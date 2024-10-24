@@ -8,6 +8,7 @@ import time as t
 
 
 
+
 class BDIGenerator:
 
     def __init__(self, input_sh=(640, 640, 3), data_folder=None, usg="train"):
@@ -74,15 +75,17 @@ class IsGenerator:
     
     def __collect_data__(self):
 
-        random_image_f = rd.choice(os.listdir(self.images_path))
-        random_image = cv2.imread(os.path.join(self.images_path, random_image_f))
-        random_segim = [cv2.imread(os.path.join(self.segmentation_path, image_f)) 
-                        for image_f in os.listdir(self.segmentation_path)
-                        if image_f == random_image_f][0]
         
+        random_idx = np.random.randint(0, len(os.listdir(self.images_path)))
+        random_image = cv2.imread(os.path.join(self.images_path, os.listdir(self.images_path)[random_idx]))
+        random_segim = cv2.imread(os.path.join(self.segmentation_path, os.listdir(self.segmentation_path)[random_idx]))
         
+        random_image = np.asarray(random_image)
+        random_segim = np.asarray(random_segim)
+
         random_image = cv2.resize(random_image, self.input_sz)
         random_segim = cv2.resize(random_segim, self.input_sz)
+
         
 
         return random_image, random_segim
