@@ -8,33 +8,50 @@ from custom_callbacks import SegmentationModelCallback
 
 
 
-def __run__():
+def make_vidbuffer(videopath=None):
     
-    cap = cv2.VideoCapture(0)
+    img_buffer = []
+    cap = cv2.VideoCapture(videopath)
+    if videopath is None:
+        cap = cv2.VideoCapture()
+    
     model = BSS()
     model.model.load_weights("C:\\Users\\1\\Desktop\\drone_solution\\src\\models\\model_weights\\weights.weights.h5")
 
     while True:
         
-        _, frame = cap.read()
-        
-        frame = cv2.resize(frame, (128, 128))
-        frame = frame / 255.0
-        frame = np.expand_dims(frame, axis=0)
+        acc, frame = cap.read()
+        if acc:
 
-        segmented_image = model.predict(frame)
-        segmented_image = np.squeeze(segmented_image)
+            frame = cv2.resize(frame, (128, 128))
+            frame = frame / 255.0
+            
+            segmented_image = model.predict(np.expand_dims(frame, axis=0))
+            segmented_image = np.squeeze(segmented_image)
+            segmented_image = cv2.resize(segmented_image, (620, 620))
+            
+            img_buffer.append(segmented_image)
         
-        
-        frame = cv2.resize(np.squeeze(frame), (640, 640))
-        segmented_image = cv2.resize(segmented_image, (640, 640))
-        cv2.imshow("frame", frame)
-        cv2.imshow("segmentation", segmented_image)
-
-        if cv2.waitKey(1) == ord("q"):
+        else:
             break
+    
+    return img_buffer
+
+def write_video(vid_buffer, videpath=None):
+    
+    out = cv2.VideoWriter(videpath, cv2.VideoWriter_fourcc(*"DIVX"), 15, (620, 620))
+    for frame in vid_buffer:
+        
+        frame = (frame * 256).astype(np.uint8)
+        frame = cv2.applyColorMap(frame, cv2.COLORMAP_JET)
+        out.write(frame)
+    
 
 
 if __name__ == "__main__":
 
-    __run__()
+    img_buffer = make_vidbuffer(videopath="C:\\Users\\1\\Desktop\\drone_solution\\meta_data\\214912_small.mp4")
+    write_video(vid_buffer=img_buffer, videpath="C:\\Users\\1\\Desktop\\drone_solution\\meta_data\\segmentation_video.mp4")
+    
+    
+    

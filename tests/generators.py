@@ -93,7 +93,7 @@ class IsGenerator:
     def __iter__(self):
 
         while True:
-
+            
             image, segim = self.__collect_data__()
             yield image, segim
     
